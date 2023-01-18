@@ -1,0 +1,22 @@
+[
+    {
+        "name":"python_web",
+        "url": "https://api.hh.ru/vacancies?area=113&excluded_text=senior%2C+middle%2C+golang%2C+преподаватель%2C+педагог%2C+java%2C+%D1%81%D1%82%D0%B0%D1%80%D1%88%D0%B8%D0%B9%2C+php%2C+%D0%B0%D0%B2%D1%82%D0%BE%D1%80%2C+support%2C+c%23%2C+fullstack%2C+Data+Engineer%2C+дата+инженер%2C+javascript%2C+java+script%2C+ml%2C+data+science%2C+power+bi%2C+c%2C+1c%2C+1%D1%81&professional_role=96&search_field=name&search_field=description&text=python+junior&from=suggest_post&ored_clusters=true&order_by=publication_time&enable_snippets=true&search_period=7"
+    },
+    {
+        "name": "java",
+        "url": "https://api.hh.ru/vacancies?area=113&excluded_text=javascripr%2C+typescript%2C+react%2C+senior%2C+middle%2C+%D1%81%D1%82%D0%B0%D1%80%D1%88%D0%B8%D0%B9%D0%B1+%D0%B0%D0%B2%D1%82%D0%BE%D1%80%2C+qa%2C+1%D1%81%2C+support%2C+c%23%2C+fullstack%2C+java+script%2C&professional_role=96&search_field=name&search_field=company_name&search_field=description&text=java+junior&enable_snippets=true&order_by=publication_time&ored_clusters=true&search_period=7"
+    },
+    {
+        "name": "javascript",
+        "url": "https://api.hh.ru/vacancies?area=113&excluded_text=senior%2C+middle%2C+java%2C+%D1%81%D1%82%D0%B0%D1%80%D1%88%D0%B8%D0%B9%2C+php%2C+%D0%B0%D0%B2%D1%82%D0%BE%D1%80%2C+qa%2C+1%D1%81%2C+support%2C+c%23%2C+fullstack%2C+python%2C&professional_role=96&search_field=name&search_field=company_name&search_field=description&text=javascript+junior&enable_snippets=true&order_by=publication_time&ored_clusters=true&search_period=7"
+    },
+    {    
+        "name": "data_analyst",
+        "url": "https://api.hh.ru/vacancies?text=%D0%90%D0%BD%D0%B0%D0%BB%D0%B8%D1%82%D0%B8%D0%BA+%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85+junior&from=suggest_post&area=113&professional_role=10&ored_clusters=true&order_by=publication_time&search_field=name&search_field=description&enable_snippets=true&search_period=7&excluded_text=senior%2C+middle%2C+%D1%81%D1%82%D0%B0%D1%80%D1%88%D0%B8%D0%B9%2C+%D1%80%D1%83%D0%BA%D0%BE%D0%B2%D0%BE%D0%B4%D0%B8%D1%82%D0%B5%D0%BB%D1%8C"
+    },    
+    {    
+        "name": "qa",
+        "url": "https://api.hh.ru/vacancies?text=qa+junior&from=suggest_post&area=113&professional_role=124&ored_clusters=true&order_by=publication_time&search_field=name&search_field=description&enable_snippets=true&search_period=7&excluded_text=senior%2C+middle%2C+java%2C+%D1%81%D1%82%D0%B0%D1%80%D1%88%D0%B8%D0%B9%2C+php%2C+%D0%B0%D0%B2%D1%82%D0%BE%D1%80%2C+support%2C+c%23%2C+fullstack%2C"
+    }
+]
