@@ -8,7 +8,7 @@ from aiogram import Bot, types, exceptions
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 
-from keyboards import positions, position_keyboard
+from keyboards import positions, position_keyboard, get_state_keyboard, get_cities_keyboard, states_list, all_cities
 from models.models import User
 from setup_db import db
 from start_app import start_app
@@ -21,6 +21,8 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
 logging.basicConfig(filename='./logs.txt', level=logging.INFO, format='%(asctime)s - %(message)s')
+
+
 
 
 @dp.message_handler(commands='start')
@@ -38,43 +40,54 @@ async def cmd_start(msg: types.Message):
 
     user = db.session.query(User).filter(User.user_id == msg.from_user.id).first()
     if user:
-        await bot.send_message(msg.chat.id, 'Вы уже зарегистрированы')
+        markup: any = types.ReplyKeyboardRemove(True)
+        await bot.send_message(msg.chat.id, 'Вы уже зарегистрированы', reply_markup=markup)
     else:
         logging.info(f"{msg.chat.full_name} начал регистрацию")
         await bot.send_message(msg.chat.id, 'Выберите позицию:', reply_markup=position_keyboard)
+        
 
 
-@dp.message_handler(content_types=types.message.ContentTypes.TEXT)
-async def set_position(msg: types.Message):
-    """
-    This function is a message handler for text messages in the Telegram bot. 
-    When a text message is received, the function first checks if the user who sent 
-    the message is already registered in the database by checking their user_id. If 
-    the message text matches with any of the predefined positions, it removes the reply 
-    keyboard and check if user is already registered if yes it sends a message saying 
-    "You are already registered" else it creates a new user with the data 
-    (user_id, chat_id, username, position) and calls open_vacancies and first_vacancies 
-    functions to get the first available job opening for the chosen position and sends 
-    the message containing the job opening information to the user. If the message text 
-    doesn't match any predefined position, it sends a message saying "I don't know that command".
-    """
-
+@dp.message_handler(commands='set_location')
+async def set_location(msg: types.Message):
     user = db.session.query(User).filter(User.user_id == msg.from_user.id).first()
-    if msg.text in positions:
-        position_name: str = msg.text.lower()
-        position_name: str = re.sub(r' ', '_', position_name)
-        markup: any = types.ReplyKeyboardRemove(True)
-        if user:
-            await bot.send_message(msg.chat.id, 'Вы уже зарегистрированы', reply_markup=markup)
-        else:
-            create_user(user_id=msg.from_user.id, chat_id=msg.chat.id, username=msg.chat.username,
-                        position=position_name)
-            vacancies: List[Dict[str, Any]] = open_vacancies(position_name)
-            text: str = first_vacancies(vacancies)
-            logging.info(f"{msg.chat.full_name} закончил регистрацию")
-            await bot.send_message(msg.chat.id, text, reply_markup=markup, parse_mode=types.ParseMode.HTML)
+    if user:
+        states_keyboard = get_state_keyboard()
+        await bot.send_message(msg.chat.id, "Выберите область из списка", reply_markup=states_keyboard)
     else:
-        await msg.answer('Не знаю такой команды')
+        markup: any = types.ReplyKeyboardRemove(True)
+        await bot.send_message(msg.chat.id, 'Для выбора локации, нужно подписаться', reply_markup=markup)
+    
+@dp.message_handler(lambda msg: msg.text in states_list)
+async def set_city(msg: types.Message):
+    user = db.session.query(User).filter(User.user_id == msg.from_user.id).first()
+    if user:
+        if msg.text in ['Москва', 'Санкт-Петербург']:
+            user = db.session.query(User).filter(User.user_id == msg.from_user.id).first()
+            user.city = msg.text
+            db.session.commit()
+            markup: any = types.ReplyKeyboardRemove(True)
+            await bot.send_message(msg.chat.id, 'Запомнил. Теперь я буду присылать только вакансии, доступные в вашем городе', reply_markup=markup)
+        else:
+            cities_keyboard = get_cities_keyboard(msg.text)
+            await bot.send_message(msg.chat.id, 'Выберите город из списка', reply_markup=cities_keyboard)
+    else:
+        markup: any = types.ReplyKeyboardRemove(True)
+        await bot.send_message(msg.chat.id, 'Сначала нужно подписаться', reply_markup=markup)
+
+
+@dp.message_handler(lambda msg: msg.text in all_cities)
+async def set_user_city(msg: types.Message):
+    user = db.session.query(User).filter(User.user_id == msg.from_user.id).first()
+    if user:
+        user.city = msg.text
+        db.session.commit()
+        markup: any = types.ReplyKeyboardRemove(True)
+        await bot.send_message(msg.chat.id, 'Запомнил. Теперь я буду присылать только вакансии, доступные в вашем городе', reply_markup=markup)
+    else:
+        markup: any = types.ReplyKeyboardRemove(True)
+        await bot.send_message(msg.chat.id, 'Сначала нужно подписаться', reply_markup=markup)
+   
 
 
 @dp.message_handler(commands='db')
@@ -109,9 +122,11 @@ async def cmd_unsubscribe(msg: types.Message):
         db.session.delete(user)
         db.session.commit()
         logging.info(f"{msg.chat.full_name}  Отписался")
-        await bot.send_message(msg.chat.id, 'Надеемся, Вы отписались потому-что получили оффер ^_^')
+        markup: any = types.ReplyKeyboardRemove(True)
+        await bot.send_message(msg.chat.id, 'Надеемся, Вы отписались потому-что получили оффер ^_^', reply_markup=markup)
     else:
-        await bot.send_message(msg.chat.id, 'Вы не подписаны на рассылку.\nДля подписки используйте команду /start')
+        markup: any = types.ReplyKeyboardRemove(True)
+        await bot.send_message(msg.chat.id, 'Вы не подписаны на рассылку.\nДля подписки используйте команду /start', reply_markup=markup)
 
 
 @dp.message_handler(commands='all_users')
@@ -128,7 +143,7 @@ async def cmd_all_users(msg: types.Message):
     tim = db.session.query(User).filter(User.username == 's_tee').first()
     user_info = f'Всего пользователей - {len(users)}\n'
     for user in users:
-        user_info += f'@{user.username} - {user.position}\n'
+        user_info += f'@{user.username} - {user.position} - {user.city}\n'
     await bot.send_message(tim.chat_id, user_info)
 
 
@@ -147,6 +162,40 @@ async def cmd_send_logs(msg: types.Message):
     await bot.send_message(tim.chat_id, logs)
 
 
+    
+    
+@dp.message_handler(lambda msg: msg.text in positions, content_types=types.message.ContentTypes.TEXT)
+async def set_position(msg: types.Message):
+    """
+    This function is a message handler for text messages in the Telegram bot. 
+    When a text message is received, the function first checks if the user who sent 
+    the message is already registered in the database by checking their user_id. If 
+    the message text matches with any of the predefined positions, it removes the reply 
+    keyboard and check if user is already registered if yes it sends a message saying 
+    "You are already registered" else it creates a new user with the data 
+    (user_id, chat_id, username, position) and calls open_vacancies and first_vacancies 
+    functions to get the first available job opening for the chosen position and sends 
+    the message containing the job opening information to the user. If the message text 
+    doesn't match any predefined position, it sends a message saying "I don't know that command".
+    """
+
+    user = db.session.query(User).filter(User.user_id == msg.from_user.id).first()
+    
+    position_name: str = msg.text.lower()
+    position_name: str = re.sub(r' ', '_', position_name)
+    markup: any = types.ReplyKeyboardRemove(True)
+    if user:
+        await bot.send_message(msg.chat.id, 'Вы уже зарегистрированы', reply_markup=markup)
+    else:
+        create_user(user_id=msg.from_user.id, chat_id=msg.chat.id, username=msg.chat.username,
+                    position=position_name)
+        vacancies: List[Dict[str, Any]] = open_vacancies(position_name)
+        text: str = first_vacancies(vacancies)
+        logging.info(f"{msg.chat.full_name} закончил регистрацию")
+        await bot.send_message(msg.chat.id, text, reply_markup=markup, parse_mode=types.ParseMode.HTML)
+        
+
+
 @dp.message_handler(content_types=types.message.ContentTypes.ANY)
 async def del_flood_msg(msg: types.Message):
     """
@@ -155,6 +204,7 @@ async def del_flood_msg(msg: types.Message):
     It could be use as an anti-flood mechanism.
     """
     await msg.delete()
+    
 
 
 async def vacancy_for_user():
@@ -188,20 +238,36 @@ async def vacancy_for_user():
                 logging.info(f"Нашел вакансию:\n{new_vacancy['name']}")
                 if users:
                     for user in users:
-                        if user.position == position:
-                            logging.info('Нашел подходящего юзера')
-                            vacancy_text, markup, photo = send_one_vacancy(new_vacancy)
-                            try:
-                                await bot.send_photo(user.chat_id, photo, caption=vacancy_text, reply_markup=markup,
-                                                     parse_mode=types.ParseMode.HTML)
+                        if user.city is None:
+                            if user.position == position:
+                                logging.info('Нашел подходящего юзера без города')
+                                vacancy_text, markup, photo = send_one_vacancy(new_vacancy)
+                                try:
+                                    await bot.send_photo(user.chat_id, photo, caption=vacancy_text, reply_markup=markup,
+                                                        parse_mode=types.ParseMode.HTML)
 
-                            except exceptions.BotBlocked:
-                                db.session.delete(user)
-                                db.session.commit()
-                                logging.info(f'Пользователь удален')
-
+                                except exceptions.BotBlocked:
+                                    db.session.delete(user)
+                                    db.session.commit()
+                                    logging.info(f'Пользователь удален')
+                                    continue
+                            else:
                                 continue
+                        else:
+                            if user.position == position and user.city == new_vacancy['location']:
+                                logging.info('Нашел подходящего юзера с городом')
+                                vacancy_text, markup, photo = send_one_vacancy(new_vacancy)
+                                try:
+                                    await bot.send_photo(user.chat_id, photo, caption=vacancy_text, reply_markup=markup,
+                                                        parse_mode=types.ParseMode.HTML)
 
+                                except exceptions.BotBlocked:
+                                    db.session.delete(user)
+                                    db.session.commit()
+                                    logging.info(f'Пользователь удален')
+                                    continue
+                            else:
+                                continue
                 else:
                     continue
         delete_files_from_folder()

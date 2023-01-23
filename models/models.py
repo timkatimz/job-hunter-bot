@@ -8,4 +8,4 @@ class User(db.Model):
     chat_id = db.Column(db.Integer, nullable=False)
     username = db.Column(db.String(50))
     position = db.Column(db.String(25), nullable=False)
-    is_active = db.Column(db.Boolean(), default=True)
+    city = db.Column(db.String(100), nullable=True, default=None)

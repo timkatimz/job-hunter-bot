@@ -14,4 +14,4 @@ COPY . .
 RUN flask db migrate
 RUN flask db upgrade
 # run flask
-CMD ["sh", "python3", "app.py"]
+CMD ["python", "app.py"]

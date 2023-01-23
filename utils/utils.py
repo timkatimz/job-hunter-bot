@@ -14,6 +14,7 @@ from utils.validators import validate_description_requirements, validate_salary
 
 
 def get_vacancies(position_name: str) -> List[Dict[str, Any]]:
+    
     """
 
     This function takes in a single argument, position_name which is a string representing 
@@ -91,7 +92,7 @@ def vacancies_for_new_users(position_url: str) -> List[Dict[str, Any]]:
                     experience = re.sub(r'Нет опыта', 'Можно без опыта', experience)
                 salary = validate_salary(salary)
 
-                location = re.sub(r'-', '_', location)
+                
 
                 vacancies.append({
                     'name': vacancy_name,
@@ -158,9 +159,10 @@ str: A string containing the name, experience, salary, location, requirements an
 """
     first_vacancy = 'Как только появится новая вакансия, я вам сообщу.\nА пока можете просмотреть подборку новых вакансий на вашу позицию:\n\n'
     for vacancy in vacancies[0:5]:
+        location = re.sub(r'-', '_', vacancy['location'])
         first_vacancy += f"<strong>{vacancy['name']}</strong>\n"
         first_vacancy += f"<strong>Опыт:</strong> {vacancy['experience']}. <strong>з/п:</strong> {vacancy['salary']}\n"
-        first_vacancy += f"<strong>Локация:</strong>  #{vacancy['location']}\n"
+        first_vacancy += f"<strong>Локация:</strong>  #{location}\n"
         first_vacancy += f"<strong>Требования:</strong>\n{vacancy['requirements']}\n"
         first_vacancy += f"<a href=\'{vacancy['url']}\'>Подробнее</a>\n\n"
     return first_vacancy
@@ -198,10 +200,11 @@ Union[str, any, BinaryIO]: A string containing information about the vacancy,
 an InlineKeyboardMarkup object with a button to apply to the vacancy, and a photo
 with the vacancy's information.
 """
+    location = re.sub(r'-', '_', vacancy['location'])
     vacancy_text = f"<strong>Позиция:</strong> {vacancy['name']}\n" \
                    f"#{vacancy['schedule'].replace(' ', '_').lower()}\n\n" \
                    f"<strong>Компания:</strong> {vacancy['company']}\n" \
-                   f"<strong>Локация:</strong> #{vacancy['location']}\n" \
+                   f"<strong>Локация:</strong> #{location}\n" \
                    f"<strong>Зарплата:</strong> {vacancy['salary']}\n" \
                    f"<strong>Опыт:</strong> {vacancy['experience']}\n\n" \
                    f"<strong>Краткое описание:</strong>\n {vacancy['description']}\n\n" \
