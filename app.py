@@ -37,7 +37,6 @@ async def cmd_start(msg: types.Message):
     and sends a message asking the user to select a position, with a reply keyboard for
     choosing the position.
     """
-
     user = db.session.query(User).filter(User.user_id == msg.from_user.id).first()
     if user:
         markup: any = types.ReplyKeyboardRemove(True)
@@ -46,6 +45,33 @@ async def cmd_start(msg: types.Message):
         logging.info(f"{msg.chat.full_name} начал регистрацию")
         await bot.send_message(msg.chat.id, 'Выберите позицию:', reply_markup=position_keyboard)
         
+
+@dp.message_handler(commands='help')
+async def get_help(msg: types.Message):
+    help_text = f'Работа бота заключается в персональном подборе вакансий для пользователя на сайте HeadHunter.\nВакансии подбираются'
+    help_text += f' на основе указанных пользователем данных:\n\n- Позиция (Python, QA, Java и т.д)\n'
+    help_text += f'- Локация (Выбор локации доступен в меню). После выбора локации, пользователь будет получать вакансии только по выбранному городу\n\n'
+    help_text += f'Выбор позиции является обязательным условием для получения вакансий. Выбор локации на усмотрение пользователя.'
+    help_text += f'\nЕсли локация не выбрана, пользователь будет получать новые вакансии доступные на территории РФ\n'
+    help_text += f'Выбор градации невозможен. По умолчанию, градация всех позиций - "Junior"\n\n'
+    help_text += f'Пользователю доступен выбор только одной позиции и одной локации с выбором конкретного города.\n'
+    help_text += f'Для смены позиции нужно отписаться (Меню -> Отписаться от рассылки) и подписаться заново '
+    help_text += f'(Меню -> Подписатсья на рассылку) с выбором другой позиции.\nДля смены локации достаточно выбрать в меню пункт "Выбор локации" и выбрать новую из списка.\n'
+    help_text += f'Чтобы убрать привязку к локации: Меню -> "Удалить привязку к локации" \n\n'    
+    help_text += f'Если у вас возникнут дополнительные вопросы, можно задать их @s_tee'
+    await bot.send_message(msg.chat.id, help_text)
+    
+    
+@dp.message_handler(commands='commands')
+async def get_commands(msg: types.Message):
+    command_text = '<strong>Список доступных команд</strong>:\n\n'
+    command_text += '/start - команда для начала работы с ботом и регистрации пользователя\n'
+    command_text += '/unsubscribe - команда для отписки от рассылки вакансий\n'
+    command_text += '/set_location - команда для выбора или смены локации\n'
+    command_text += '/remove_location - команда для сброса данных о локации\n'
+    command_text += '/help - команда для предоставлении дополнительной информации о боте'
+    await bot.send_message(msg.chat.id, command_text, parse_mode=types.ParseMode.HTML)
+    
 
 
 @dp.message_handler(commands='set_location')
@@ -74,6 +100,7 @@ async def set_city(msg: types.Message):
     else:
         markup: any = types.ReplyKeyboardRemove(True)
         await bot.send_message(msg.chat.id, 'Сначала нужно подписаться', reply_markup=markup)
+        
 
 
 @dp.message_handler(lambda msg: msg.text in all_cities)
@@ -87,7 +114,16 @@ async def set_user_city(msg: types.Message):
     else:
         markup: any = types.ReplyKeyboardRemove(True)
         await bot.send_message(msg.chat.id, 'Сначала нужно подписаться', reply_markup=markup)
-   
+
+
+
+@dp.message_handler(commands='remove_location')
+async def remove_location(msg: types.Message):
+    user = db.session.query(User).filter(User.user_id == msg.from_user.id).first()
+    user.city = None
+    db.session.add(user)
+    db.session.commit()
+    await bot.send_message(msg.chat.id, 'Запомнил. Теперь я буду отправлять вам вакансии без привязки к локации')
 
 
 @dp.message_handler(commands='db')
@@ -193,7 +229,6 @@ async def set_position(msg: types.Message):
         text: str = first_vacancies(vacancies)
         logging.info(f"{msg.chat.full_name} закончил регистрацию")
         await bot.send_message(msg.chat.id, text, reply_markup=markup, parse_mode=types.ParseMode.HTML)
-        
 
 
 @dp.message_handler(content_types=types.message.ContentTypes.ANY)
@@ -311,6 +346,6 @@ async def repeat_my_function():
 
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.create_task(repeat_my_function())
+    #loop = asyncio.get_event_loop()
+    #loop.create_task(repeat_my_function())
     executor.start_polling(dp)
