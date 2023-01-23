@@ -36,6 +36,9 @@ To unsubscribe from the bot, send the command /unsubscribe. This will remove you
 
 ----
   
-#### Note
+### Note
 
-This bot is for educational purposes only and is not affiliated with hh.ru.
+[Check out the Job Hunter Bot](https://t.me/jobninja_bot)
+
+
+[Join me on Telegram](https://t.me/s_tee)
